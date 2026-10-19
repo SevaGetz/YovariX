@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YovariX
 // @namespace    Yovari.x.mod
-// @version      1.1.1
+// @version      1.1.2
 // @description  YovariX: modular mod for X/Twitter
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -178,6 +178,7 @@
       officialThemes: "Официальные темы",
       noOfficial: "Официальных тем пока нет",
       myThemes: "Мои темы",
+      officialDesc: "Темы из репозитория YovariX ({n} вкл.)",
       version: "Версия",
       repo: "Репозиторий",
       update: "Проверить обновление",
@@ -255,6 +256,7 @@
       officialThemes: "Official themes",
       noOfficial: "No official themes yet",
       myThemes: "My themes",
+      officialDesc: "Themes from the YovariX repository ({n} on)",
       version: "Version",
       repo: "Repository",
       update: "Check for updates",
@@ -697,6 +699,13 @@
     tune: '<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>'
   };
   var iconBtn = (title, inner, fill, onclick) => h("button", { type: "button", class: "yx-icon", title, onclick }, ico(inner, fill));
+  var tile = (icon, title, desc, onclick) => h(
+    "button",
+    { type: "button", class: "yx-tile", onclick },
+    h("span", { class: "yx-tile-ico" }, ico(icon)),
+    h("span", { class: "yx-tile-txt" }, h("span", { class: "yx-tile-title" }, title), h("span", { class: "yx-tile-desc" }, desc)),
+    h("span", { class: "yx-tile-chev" }, ico(I.chev))
+  );
 
   // src/core/themes.js
   var KEY = "yovarix:themes";
@@ -940,7 +949,7 @@
     }
   };
   var STATUS = { loading: "stLoading", ok: "stOk", error: "stError", cached: "stCached" };
-  function renderThemes(box) {
+  function renderThemes(box, go) {
     const input = h("input", { class: "yx-search", type: "text", placeholder: t("themeUrl") });
     const add = () => {
       const err = addTheme(input.value);
@@ -983,6 +992,31 @@
         ));
       });
     };
+    const off = onThemesChange(draw);
+    draw();
+    const s = getThemes();
+    const area = h("textarea", { class: "yx-code", spellcheck: false, placeholder: t("customPh") });
+    area.value = s.custom;
+    let timer3 = 0;
+    area.addEventListener("input", () => {
+      clearTimeout(timer3);
+      timer3 = setTimeout(() => setCustom(area.value, null), 400);
+    });
+    const onCount = getThemes().links.filter((l) => l.enabled && l.official).length;
+    box.append(
+      tile(I.themes, t("officialThemes"), t("officialDesc", { n: onCount }), () => go("themes-official")),
+      h("div", { class: "yx-sect" }, t("myThemes")),
+      h("div", { class: "yx-add" }, input, h("button", { type: "button", class: "yx-primary", onclick: add }, t("add"))),
+      list,
+      h("div", { class: "yx-sect" }, t("customCss"), sw(s.customOn, (v) => setCustom(null, v))),
+      area
+    );
+    return () => {
+      off();
+      clearTimeout(timer3);
+    };
+  }
+  function renderOfficialThemes(box) {
     const offList = h("div");
     const drawOfficial = () => {
       offList.textContent = "";
@@ -1016,35 +1050,14 @@
         ));
       });
     };
-    const drawAll = () => {
-      draw();
-      drawOfficial();
-    };
-    const off = onThemesChange(drawAll);
-    draw();
+    const off = onThemesChange(drawOfficial);
     drawOfficial();
     loadOfficial(false);
-    const s = getThemes();
-    const area = h("textarea", { class: "yx-code", spellcheck: false, placeholder: t("customPh") });
-    area.value = s.custom;
-    let timer3 = 0;
-    area.addEventListener("input", () => {
-      clearTimeout(timer3);
-      timer3 = setTimeout(() => setCustom(area.value, null), 400);
-    });
     box.append(
       h("div", { class: "yx-sect", style: { marginTop: 0 } }, t("officialThemes"), iconBtn(t("refresh"), I.refresh, false, () => loadOfficial(true))),
-      offList,
-      h("div", { class: "yx-sect" }, t("myThemes")),
-      h("div", { class: "yx-add" }, input, h("button", { type: "button", class: "yx-primary", onclick: add }, t("add"))),
-      list,
-      h("div", { class: "yx-sect" }, t("customCss"), sw(s.customOn, (v) => setCustom(null, v))),
-      area
+      offList
     );
-    return () => {
-      off();
-      clearTimeout(timer3);
-    };
+    return off;
   }
 
   // src/core/version.js
@@ -1142,12 +1155,12 @@
     if (Date.now() - read(LAST_CHECK, 0) < EVERY) return;
     write(LAST_CHECK, Date.now());
     fetchLatest().then((v) => {
-      if (isNewer(v, "1.1.1")) showReloadPrompt(v, "available");
+      if (isNewer(v, "1.1.2")) showReloadPrompt(v, "available");
     }).catch(() => {
     });
   }
   function initUpdateWatch() {
-    write(RUNNING, "1.1.1");
+    write(RUNNING, "1.1.2");
     setTimeout(autoCheck, 3e3);
     if (typeof GM_addValueChangeListener !== "function") return;
     GM_addValueChangeListener(RUNNING, (name, oldV, newV, remote) => {
@@ -1157,7 +1170,7 @@
         v = typeof newV === "string" ? JSON.parse(newV) : newV;
       } catch (e) {
       }
-      if (typeof v === "string" && isNewer(v, "1.1.1")) showReloadPrompt(v);
+      if (typeof v === "string" && isNewer(v, "1.1.2")) showReloadPrompt(v);
     });
   }
 
@@ -1196,7 +1209,7 @@
   // src/core/changelog.js
   var KEY2 = "yovarix:changelogSeen";
   var keyOf = (v) => String(v).split(".").slice(0, 2).join(".");
-  var current = keyOf("1.1.1");
+  var current = keyOf("1.1.2");
   var releases = () => releases_default.filter((e) => !isNewer(e.v, current)).sort((a, b) => isNewer(a.v, b.v) ? -1 : 1);
   var renderEntries = (list) => h("div", { class: "yx-news" }, list.flatMap((e) => [
     h("h3", null, "v" + e.v, e.date ? h("span", null, e.date) : null),
@@ -1212,7 +1225,7 @@
     if (isNewer(current, seen)) write(KEY2, current);
     if (!fresh.length) return;
     setTimeout(() => showPop("news", {
-      title: t("newsTitle", { v: "1.1.1" }),
+      title: t("newsTitle", { v: "1.1.2" }),
       body: renderEntries(fresh),
       buttons: [
         { label: t("allChanges"), onclick: (box) => {
@@ -1481,10 +1494,10 @@
   var openUrl = (url) => typeof GM_openInTab === "function" ? GM_openInTab(url, { active: true }) : window.open(url, "_blank");
   function checkUpdate() {
     fetchLatest().then((v) => {
-      if (isNewer(v, "1.1.1")) {
+      if (isNewer(v, "1.1.2")) {
         openInstaller();
         showReloadPrompt(v, "pending");
-      } else toast(t("upToDate", { v: "1.1.1" }));
+      } else toast(t("upToDate", { v: "1.1.2" }));
     }).catch(() => toast(t("updateErr")));
   }
   function renderGeneral(box) {
@@ -1500,7 +1513,7 @@
           showOnboarding(openSettings);
         } }, t("onbAgain"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v1.1.1")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v1.1.2")
     );
   }
   function getPages() {
@@ -1508,7 +1521,8 @@
     const pages = [
       { id: "general", icon: I.tune, title: t("general"), desc: t("generalDesc"), render: renderGeneral },
       { id: "plugins", icon: I.plugins, title: t("plugins"), desc: t("pluginsDesc", { n: on, m: plugins.length }), render: renderPlugins },
-      { id: "themes", icon: I.themes, title: t("themes"), desc: t("themesDesc", { n: getThemes().links.filter((l) => l.enabled).length }), render: renderThemes }
+      { id: "themes", icon: I.themes, title: t("themes"), desc: t("themesDesc", { n: getThemes().links.filter((l) => l.enabled).length }), render: renderThemes },
+      { id: "themes-official", parent: "themes", hidden: true, icon: I.themes, title: t("officialThemes"), render: renderOfficialThemes }
     ];
     plugins.filter((p) => p.started && p.tile).forEach((p) => pages.push({
       id: "plugin:" + p.name,
@@ -1538,7 +1552,7 @@
     box.style.fontFamily = xFont();
     box.style.setProperty("--yx-bg", bg);
     box.style.setProperty("--yx-fg", cs.color);
-    const back = iconBtn(t("back"), I.back, true, () => show(null));
+    const back = iconBtn(t("back"), I.back, true, () => show((getPages().find((p) => p.id === current2) || {}).parent || null));
     back.hidden = true;
     const title = h("h2", null, "YovariX");
     const body = h("div", { class: "yx-body" });
@@ -1548,7 +1562,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v1.1.1"),
+        h("span", { class: "yx-ver" }, "v1.1.2"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -1574,16 +1588,12 @@
       if (!page) {
         title.textContent = "YovariX";
         back.hidden = true;
-        body.append(h("div", { class: "yx-tiles" }, getPages().map((p) => h("button", {
-          type: "button",
-          class: "yx-tile",
-          onclick: () => show(p.id)
-        }, h("span", { class: "yx-tile-ico" }, ico(p.icon)), h("span", { class: "yx-tile-txt" }, h("span", { class: "yx-tile-title" }, p.title), h("span", { class: "yx-tile-desc" }, p.desc)), h("span", { class: "yx-tile-chev" }, ico(I.chev))))));
+        body.append(h("div", { class: "yx-tiles" }, getPages().filter((p) => !p.hidden).map((p) => tile(p.icon, p.title, p.desc, () => show(p.id)))));
         return;
       }
       title.textContent = page.title;
       back.hidden = false;
-      cleanup = page.render(body) || null;
+      cleanup = page.render(body, show) || null;
     }
     const offLang = onLangChange(() => show(current2));
     const onKey = (e) => {
@@ -1756,7 +1766,7 @@
       return;
     }
     favs.forEach((item) => {
-      const tile = el("div", "fav-tile");
+      const tile2 = el("div", "fav-tile");
       let m;
       if (item.type === "video") {
         m = el("video");
@@ -1778,14 +1788,14 @@
               io.disconnect();
             }
           }, { root: panel });
-          io.observe(tile);
+          io.observe(tile2);
         }
-        tile.addEventListener("mouseenter", () => {
+        tile2.addEventListener("mouseenter", () => {
           loadVideo();
           m.play().catch(() => {
           });
         });
-        tile.addEventListener("mouseleave", () => m.pause());
+        tile2.addEventListener("mouseleave", () => m.pause());
       } else {
         m = el("img");
         m.loading = "lazy";
@@ -1799,10 +1809,10 @@
         e.stopPropagation();
         toggle(item);
       };
-      tile.append(m, del);
-      if (onPick) tile.onclick = () => onPick(item);
-      else tile.style.cursor = "default";
-      panel.appendChild(tile);
+      tile2.append(m, del);
+      if (onPick) tile2.onclick = () => onPick(item);
+      else tile2.style.cursor = "default";
+      panel.appendChild(tile2);
     });
   }
 
@@ -2662,7 +2672,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v1.1.1", location.href);
+  LOG("loaded v1.1.2", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   initThemes();
