@@ -2,8 +2,8 @@ import { h, toast, xFont } from '../dom';
 import { plugins, isEnabled, setEnabled, exportConfig, importConfig, resetConfig } from '../api';
 import { t, tr, onLangChange } from '../i18n';
 import { settings as general } from '../general';
-import { ico, I, iconBtn } from './icons';
-import { renderThemes } from './themes';
+import { I, iconBtn, tile } from './icons';
+import { renderThemes, renderOfficialThemes } from './themes';
 import { getThemes } from '../themes';
 import { isNewer } from '../version';
 import { showReloadPrompt } from './reload';
@@ -111,6 +111,7 @@ function getPages() {
     { id: 'general', icon: I.tune, title: t('general'), desc: t('generalDesc'), render: renderGeneral },
     { id: 'plugins', icon: I.plugins, title: t('plugins'), desc: t('pluginsDesc', { n: on, m: plugins.length }), render: renderPlugins },
     { id: 'themes', icon: I.themes, title: t('themes'), desc: t('themesDesc', { n: getThemes().links.filter((l) => l.enabled).length }), render: renderThemes },
+    { id: 'themes-official', parent: 'themes', hidden: true, icon: I.themes, title: t('officialThemes'), render: renderOfficialThemes },
   ];
   plugins.filter((p) => p.started && p.tile).forEach((p) => pages.push({
     id: 'plugin:' + p.name,
@@ -142,7 +143,7 @@ export function openSettings(pageId) {
   box.style.setProperty('--yx-bg', bg);
   box.style.setProperty('--yx-fg', cs.color);
 
-  const back = iconBtn(t('back'), I.back, true, () => show(null));
+  const back = iconBtn(t('back'), I.back, true, () => show((getPages().find((p) => p.id === current) || {}).parent || null));
   back.hidden = true;
   const title = h('h2', null, 'YovariX');
   const body = h('div', { class: 'yx-body' });
@@ -166,14 +167,12 @@ export function openSettings(pageId) {
     if (!page) {
       title.textContent = 'YovariX';
       back.hidden = true;
-      body.append(h('div', { class: 'yx-tiles' }, getPages().map((p) => h('button', {
-        type: 'button', class: 'yx-tile', onclick: () => show(p.id),
-      }, h('span', { class: 'yx-tile-ico' }, ico(p.icon)), h('span', { class: 'yx-tile-txt' }, h('span', { class: 'yx-tile-title' }, p.title), h('span', { class: 'yx-tile-desc' }, p.desc)), h('span', { class: 'yx-tile-chev' }, ico(I.chev))))));
+      body.append(h('div', { class: 'yx-tiles' }, getPages().filter((p) => !p.hidden).map((p) => tile(p.icon, p.title, p.desc, () => show(p.id)))));
       return;
     }
     title.textContent = page.title;
     back.hidden = false;
-    cleanup = page.render(body) || null;
+    cleanup = page.render(body, show) || null;
   }
 
   const offLang = onLangChange(() => show(current));

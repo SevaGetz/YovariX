@@ -168,7 +168,7 @@ export async function loadOfficial(force) {
       .filter((f) => f && f.type === 'file' && /\.css$/i.test(f.name) && f.download_url)
       .map((f) => ({ name: f.name.replace(/\.css$/i, ''), url: f.download_url }))
       .sort((a, b) => a.name.localeCompare(b.name));
-
+    // подтягиваем @name/@description, чтобы показать их ещё до включения темы
     await Promise.all(items.map(async (it) => {
       try { it.meta = parseMeta(await gm(it.url)); } catch (e) { it.meta = {}; }
     }));

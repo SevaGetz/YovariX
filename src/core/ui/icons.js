@@ -19,3 +19,7 @@ export const I = {
 };
 export const iconBtn = (title, inner, fill, onclick) => h('button', { type: 'button', class: 'yx-icon', title, onclick }, ico(inner, fill));
 
+export const tile = (icon, title, desc, onclick) => h('button', { type: 'button', class: 'yx-tile', onclick },
+  h('span', { class: 'yx-tile-ico' }, ico(icon)),
+  h('span', { class: 'yx-tile-txt' }, h('span', { class: 'yx-tile-title' }, title), h('span', { class: 'yx-tile-desc' }, desc)),
+  h('span', { class: 'yx-tile-chev' }, ico(I.chev)));

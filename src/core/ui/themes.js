@@ -1,6 +1,6 @@
 import { h, toast } from '../dom';
 import { t } from '../i18n';
-import { iconBtn, I } from './icons';
+import { iconBtn, I, tile } from './icons';
 import { addTheme, getMeta, getOfficial, getStatus, getThemes, loadOfficial, onThemesChange, refreshTheme, removeTheme, setCustom, setOfficialTheme, setThemeEnabled } from '../themes';
 
 const sw = (checked, onChange) => {
@@ -12,7 +12,7 @@ const sw = (checked, onChange) => {
 const fallbackName = (u) => { try { return decodeURIComponent(new URL(u).pathname.split('/').pop()) || u; } catch (e) { return u; } };
 const STATUS = { loading: 'stLoading', ok: 'stOk', error: 'stError', cached: 'stCached' };
 
-export function renderThemes(box) {
+export function renderThemes(box, go) {
   const input = h('input', { class: 'yx-search', type: 'text', placeholder: t('themeUrl') });
   const add = () => {
     const err = addTheme(input.value);
@@ -43,6 +43,27 @@ export function renderThemes(box) {
     });
   };
 
+  const off = onThemesChange(draw);
+  draw();
+
+  const s = getThemes();
+  const area = h('textarea', { class: 'yx-code', spellcheck: false, placeholder: t('customPh') });
+  area.value = s.custom;
+  let timer = 0;
+  area.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => setCustom(area.value, null), 400); });
+
+  const onCount = getThemes().links.filter((l) => l.enabled && l.official).length;
+  box.append(
+    tile(I.themes, t('officialThemes'), t('officialDesc', { n: onCount }), () => go('themes-official')),
+    h('div', { class: 'yx-sect' }, t('myThemes')),
+    h('div', { class: 'yx-add' }, input, h('button', { type: 'button', class: 'yx-primary', onclick: add }, t('add'))),
+    list,
+    h('div', { class: 'yx-sect' }, t('customCss'), sw(s.customOn, (v) => setCustom(null, v))),
+    area);
+  return () => { off(); clearTimeout(timer); };
+}
+
+export function renderOfficialThemes(box) {
   const offList = h('div');
   const drawOfficial = () => {
     offList.textContent = '';
@@ -68,25 +89,11 @@ export function renderThemes(box) {
     });
   };
 
-  const drawAll = () => { draw(); drawOfficial(); };
-  const off = onThemesChange(drawAll);
-  draw();
+  const off = onThemesChange(drawOfficial);
   drawOfficial();
   loadOfficial(false);
-
-  const s = getThemes();
-  const area = h('textarea', { class: 'yx-code', spellcheck: false, placeholder: t('customPh') });
-  area.value = s.custom;
-  let timer = 0;
-  area.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => setCustom(area.value, null), 400); });
-
   box.append(
     h('div', { class: 'yx-sect', style: { marginTop: 0 } }, t('officialThemes'), iconBtn(t('refresh'), I.refresh, false, () => loadOfficial(true))),
-    offList,
-    h('div', { class: 'yx-sect' }, t('myThemes')),
-    h('div', { class: 'yx-add' }, input, h('button', { type: 'button', class: 'yx-primary', onclick: add }, t('add'))),
-    list,
-    h('div', { class: 'yx-sect' }, t('customCss'), sw(s.customOn, (v) => setCustom(null, v))),
-    area);
-  return () => { off(); clearTimeout(timer); };
+    offList);
+  return off;
 }
