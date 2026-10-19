@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YovariX
 // @namespace    Yovari.x.mod
-// @version      1.1.0
+// @version      1.1.1
 // @description  YovariX: modular mod for X/Twitter
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -177,7 +177,7 @@
       noThemes: "Тем пока нет",
       officialThemes: "Официальные темы",
       noOfficial: "Официальных тем пока нет",
-      added: "Добавлена",
+      myThemes: "Мои темы",
       version: "Версия",
       repo: "Репозиторий",
       update: "Проверить обновление",
@@ -254,7 +254,7 @@
       noThemes: "No themes yet",
       officialThemes: "Official themes",
       noOfficial: "No official themes yet",
-      added: "Added",
+      myThemes: "My themes",
       version: "Version",
       repo: "Repository",
       update: "Check for updates",
@@ -883,6 +883,13 @@
       }
       if (!Array.isArray(list)) throw new Error("bad response");
       const items = list.filter((f) => f && f.type === "file" && /\.css$/i.test(f.name) && f.download_url).map((f) => ({ name: f.name.replace(/\.css$/i, ""), url: f.download_url })).sort((a, b) => a.name.localeCompare(b.name));
+      await Promise.all(items.map(async (it) => {
+        try {
+          it.meta = parseMeta(await gm(it.url));
+        } catch (e) {
+          it.meta = {};
+        }
+      }));
       write(OFFICIAL_KEY, { items, t: Date.now() });
       official = { status: "ok", items };
     } catch (e) {
@@ -890,6 +897,19 @@
       official = { status: cached ? "cached" : "error", items: cached || [] };
     }
     officialBusy = false;
+    emit2();
+  }
+  function setOfficialTheme(url, on) {
+    const s = getThemes();
+    const l = s.links.find((x) => x.url === url);
+    if (l) {
+      setThemeEnabled(url, on);
+      return;
+    }
+    if (!on) return;
+    s.links.push({ url, enabled: true, official: true });
+    save(s);
+    load(url, true);
     emit2();
   }
   function setCustom(css, on) {
@@ -936,7 +956,8 @@
     const list = h("div");
     const draw = () => {
       list.textContent = "";
-      const links = getThemes().links;
+      const offUrls = new Set(getOfficial().items.map((i) => i.url));
+      const links = getThemes().links.filter((l) => !l.official && !offUrls.has(l.url));
       if (!links.length) list.append(h("div", { class: "yx-empty" }, t("noThemes")));
       links.forEach((l) => {
         const meta = getMeta(l.url);
@@ -966,16 +987,17 @@
     const drawOfficial = () => {
       offList.textContent = "";
       const { status: status2, items } = getOfficial();
-      const added = new Set(getThemes().links.map((l) => l.url));
       if (!items.length) {
         const msg = status2 === "loading" ? t("stLoading") : status2 === "error" ? t("stError") : t("noOfficial");
         offList.append(h("div", { class: "yx-empty" + (status2 === "error" ? " yx-err" : "") }, msg));
         return;
       }
       if (status2 === "cached") offList.append(h("div", { class: "yx-pdesc" }, t("stCached")));
+      const links = getThemes().links;
       items.forEach((it) => {
-        const meta = getMeta(it.url);
-        const done = added.has(it.url);
+        const meta = { ...it.meta || {}, ...getMeta(it.url) };
+        const l = links.find((x) => x.url === it.url);
+        const sub = [meta.author, meta.version && "v" + meta.version].filter(Boolean).join(" · ");
         offList.append(h(
           "div",
           { class: "yx-plugin" },
@@ -986,9 +1008,10 @@
               "div",
               { class: "yx-pinfo" },
               h("div", { class: "yx-pname" }, meta.name || it.name),
-              meta.description ? h("div", { class: "yx-pdesc" }, meta.description) : null
+              meta.description ? h("div", { class: "yx-pdesc" }, meta.description) : null,
+              sub ? h("div", { class: "yx-pdesc" }, sub) : null
             ),
-            done ? h("button", { type: "button", disabled: true }, t("added")) : h("button", { type: "button", class: "yx-primary", onclick: () => addTheme(it.url) }, t("add"))
+            sw(!!(l && l.enabled), (v) => setOfficialTheme(it.url, v))
           )
         ));
       });
@@ -1010,10 +1033,11 @@
       timer3 = setTimeout(() => setCustom(area.value, null), 400);
     });
     box.append(
+      h("div", { class: "yx-sect", style: { marginTop: 0 } }, t("officialThemes"), iconBtn(t("refresh"), I.refresh, false, () => loadOfficial(true))),
+      offList,
+      h("div", { class: "yx-sect" }, t("myThemes")),
       h("div", { class: "yx-add" }, input, h("button", { type: "button", class: "yx-primary", onclick: add }, t("add"))),
       list,
-      h("div", { class: "yx-sect" }, t("officialThemes"), iconBtn(t("refresh"), I.refresh, false, () => loadOfficial(true))),
-      offList,
       h("div", { class: "yx-sect" }, t("customCss"), sw(s.customOn, (v) => setCustom(null, v))),
       area
     );
@@ -1118,12 +1142,12 @@
     if (Date.now() - read(LAST_CHECK, 0) < EVERY) return;
     write(LAST_CHECK, Date.now());
     fetchLatest().then((v) => {
-      if (isNewer(v, "1.1.0")) showReloadPrompt(v, "available");
+      if (isNewer(v, "1.1.1")) showReloadPrompt(v, "available");
     }).catch(() => {
     });
   }
   function initUpdateWatch() {
-    write(RUNNING, "1.1.0");
+    write(RUNNING, "1.1.1");
     setTimeout(autoCheck, 3e3);
     if (typeof GM_addValueChangeListener !== "function") return;
     GM_addValueChangeListener(RUNNING, (name, oldV, newV, remote) => {
@@ -1133,7 +1157,7 @@
         v = typeof newV === "string" ? JSON.parse(newV) : newV;
       } catch (e) {
       }
-      if (typeof v === "string" && isNewer(v, "1.1.0")) showReloadPrompt(v);
+      if (typeof v === "string" && isNewer(v, "1.1.1")) showReloadPrompt(v);
     });
   }
 
@@ -1172,7 +1196,7 @@
   // src/core/changelog.js
   var KEY2 = "yovarix:changelogSeen";
   var keyOf = (v) => String(v).split(".").slice(0, 2).join(".");
-  var current = keyOf("1.1.0");
+  var current = keyOf("1.1.1");
   var releases = () => releases_default.filter((e) => !isNewer(e.v, current)).sort((a, b) => isNewer(a.v, b.v) ? -1 : 1);
   var renderEntries = (list) => h("div", { class: "yx-news" }, list.flatMap((e) => [
     h("h3", null, "v" + e.v, e.date ? h("span", null, e.date) : null),
@@ -1188,7 +1212,7 @@
     if (isNewer(current, seen)) write(KEY2, current);
     if (!fresh.length) return;
     setTimeout(() => showPop("news", {
-      title: t("newsTitle", { v: "1.1.0" }),
+      title: t("newsTitle", { v: "1.1.1" }),
       body: renderEntries(fresh),
       buttons: [
         { label: t("allChanges"), onclick: (box) => {
@@ -1457,10 +1481,10 @@
   var openUrl = (url) => typeof GM_openInTab === "function" ? GM_openInTab(url, { active: true }) : window.open(url, "_blank");
   function checkUpdate() {
     fetchLatest().then((v) => {
-      if (isNewer(v, "1.1.0")) {
+      if (isNewer(v, "1.1.1")) {
         openInstaller();
         showReloadPrompt(v, "pending");
-      } else toast(t("upToDate", { v: "1.1.0" }));
+      } else toast(t("upToDate", { v: "1.1.1" }));
     }).catch(() => toast(t("updateErr")));
   }
   function renderGeneral(box) {
@@ -1476,7 +1500,7 @@
           showOnboarding(openSettings);
         } }, t("onbAgain"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v1.1.0")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v1.1.1")
     );
   }
   function getPages() {
@@ -1524,7 +1548,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v1.1.0"),
+        h("span", { class: "yx-ver" }, "v1.1.1"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -2638,7 +2662,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v1.1.0", location.href);
+  LOG("loaded v1.1.1", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   initThemes();
