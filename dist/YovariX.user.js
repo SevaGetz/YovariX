@@ -1177,6 +1177,16 @@
   // src/releases.js
   var releases_default = [
     {
+      v: "1.1.0",
+      date: "2026-10-19",
+      ru: [
+        "Добавлено меню официальные темы"
+      ],
+      en: [
+        "Added official themes menu"
+      ]
+    },
+    {
       v: "1.0",
       date: "2026-10-15",
       ru: [
