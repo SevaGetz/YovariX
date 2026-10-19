@@ -1,7 +1,7 @@
 import { h, toast } from '../dom';
 import { t } from '../i18n';
 import { iconBtn, I } from './icons';
-import { addTheme, getMeta, getOfficial, getStatus, getThemes, loadOfficial, onThemesChange, refreshTheme, removeTheme, setCustom, setThemeEnabled } from '../themes';
+import { addTheme, getMeta, getOfficial, getStatus, getThemes, loadOfficial, onThemesChange, refreshTheme, removeTheme, setCustom, setOfficialTheme, setThemeEnabled } from '../themes';
 
 const sw = (checked, onChange) => {
   const i = h('input', { type: 'checkbox', checked: !!checked });
@@ -24,7 +24,8 @@ export function renderThemes(box) {
   const list = h('div');
   const draw = () => {
     list.textContent = '';
-    const links = getThemes().links;
+    const offUrls = new Set(getOfficial().items.map((i) => i.url));
+    const links = getThemes().links.filter((l) => !l.official && !offUrls.has(l.url));
     if (!links.length) list.append(h('div', { class: 'yx-empty' }, t('noThemes')));
     links.forEach((l) => {
       const meta = getMeta(l.url);
@@ -46,24 +47,24 @@ export function renderThemes(box) {
   const drawOfficial = () => {
     offList.textContent = '';
     const { status, items } = getOfficial();
-    const added = new Set(getThemes().links.map((l) => l.url));
     if (!items.length) {
       const msg = status === 'loading' ? t('stLoading') : status === 'error' ? t('stError') : t('noOfficial');
       offList.append(h('div', { class: 'yx-empty' + (status === 'error' ? ' yx-err' : '') }, msg));
       return;
     }
     if (status === 'cached') offList.append(h('div', { class: 'yx-pdesc' }, t('stCached')));
+    const links = getThemes().links;
     items.forEach((it) => {
-      const meta = getMeta(it.url);
-      const done = added.has(it.url);
+      const meta = { ...(it.meta || {}), ...getMeta(it.url) };
+      const l = links.find((x) => x.url === it.url);
+      const sub = [meta.author, meta.version && 'v' + meta.version].filter(Boolean).join(' · ');
       offList.append(h('div', { class: 'yx-plugin' },
         h('div', { class: 'yx-prow' },
           h('div', { class: 'yx-pinfo' },
             h('div', { class: 'yx-pname' }, meta.name || it.name),
-            meta.description ? h('div', { class: 'yx-pdesc' }, meta.description) : null),
-          done
-            ? h('button', { type: 'button', disabled: true }, t('added'))
-            : h('button', { type: 'button', class: 'yx-primary', onclick: () => addTheme(it.url) }, t('add')))));
+            meta.description ? h('div', { class: 'yx-pdesc' }, meta.description) : null,
+            sub ? h('div', { class: 'yx-pdesc' }, sub) : null),
+          sw(!!(l && l.enabled), (v) => setOfficialTheme(it.url, v)))));
     });
   };
 
@@ -80,10 +81,11 @@ export function renderThemes(box) {
   area.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => setCustom(area.value, null), 400); });
 
   box.append(
+    h('div', { class: 'yx-sect', style: { marginTop: 0 } }, t('officialThemes'), iconBtn(t('refresh'), I.refresh, false, () => loadOfficial(true))),
+    offList,
+    h('div', { class: 'yx-sect' }, t('myThemes')),
     h('div', { class: 'yx-add' }, input, h('button', { type: 'button', class: 'yx-primary', onclick: add }, t('add'))),
     list,
-    h('div', { class: 'yx-sect' }, t('officialThemes'), iconBtn(t('refresh'), I.refresh, false, () => loadOfficial(true))),
-    offList,
     h('div', { class: 'yx-sect' }, t('customCss'), sw(s.customOn, (v) => setCustom(null, v))),
     area);
   return () => { off(); clearTimeout(timer); };

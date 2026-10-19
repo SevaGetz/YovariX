@@ -161,13 +161,17 @@ export async function loadOfficial(force) {
     try {
       list = JSON.parse(await gm(OFFICIAL_API, { Accept: 'application/vnd.github+json' }));
     } catch (e) {
-      if (e.message !== 'HTTP 404') throw e;
+      if (e.message !== 'HTTP 404') throw e; // папки themes ещё нет — просто пустой список
     }
     if (!Array.isArray(list)) throw new Error('bad response');
     const items = list
       .filter((f) => f && f.type === 'file' && /\.css$/i.test(f.name) && f.download_url)
       .map((f) => ({ name: f.name.replace(/\.css$/i, ''), url: f.download_url }))
       .sort((a, b) => a.name.localeCompare(b.name));
+
+    await Promise.all(items.map(async (it) => {
+      try { it.meta = parseMeta(await gm(it.url)); } catch (e) { it.meta = {}; }
+    }));
     write(OFFICIAL_KEY, { items, t: Date.now() });
     official = { status: 'ok', items };
   } catch (e) {
@@ -175,6 +179,17 @@ export async function loadOfficial(force) {
     official = { status: cached ? 'cached' : 'error', items: cached || [] };
   }
   officialBusy = false;
+  emit();
+}
+
+export function setOfficialTheme(url, on) {
+  const s = getThemes();
+  const l = s.links.find((x) => x.url === url);
+  if (l) { setThemeEnabled(url, on); return; }
+  if (!on) return;
+  s.links.push({ url, enabled: true, official: true });
+  save(s);
+  load(url, true);
   emit();
 }
 
