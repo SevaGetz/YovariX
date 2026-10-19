@@ -36,8 +36,8 @@ function parseMeta(css) {
   return o;
 }
 
-const gm = (url) => new Promise((res, rej) => GM_xmlhttpRequest({
-  method: 'GET', url, responseType: 'text', timeout: 15000,
+const gm = (url, headers) => new Promise((res, rej) => GM_xmlhttpRequest({
+  method: 'GET', url, headers, responseType: 'text', timeout: 15000,
   onload: (r) => (r.status >= 200 && r.status < 300 ? res(r.responseText) : rej(new Error('HTTP ' + r.status))),
   onerror: () => rej(new Error('network')),
   ontimeout: () => rej(new Error('timeout')),
@@ -139,6 +139,44 @@ export function setThemeEnabled(url, on) {
 }
 
 export const refreshTheme = (url) => load(url, true);
+
+const OFFICIAL_KEY = 'yovarix:officialthemes';
+const OFFICIAL_TTL = 60 * 60 * 1000;
+const OFFICIAL_API = `https://api.github.com/repos/${__REPO__}/contents/themes`;
+
+let official = { status: '', items: [] }; // status: '' | 'loading' | 'ok' | 'error' | 'cached'
+let officialBusy = false;
+export const getOfficial = () => official;
+
+export async function loadOfficial(force) {
+  if (officialBusy) return;
+  const c = read(OFFICIAL_KEY, null);
+  const cached = c && Array.isArray(c.items) ? c.items : null;
+  if (!force && cached && Date.now() - c.t < OFFICIAL_TTL) { official = { status: 'ok', items: cached }; emit(); return; }
+  officialBusy = true;
+  official = { status: 'loading', items: cached || [] };
+  emit();
+  try {
+    let list = [];
+    try {
+      list = JSON.parse(await gm(OFFICIAL_API, { Accept: 'application/vnd.github+json' }));
+    } catch (e) {
+      if (e.message !== 'HTTP 404') throw e;
+    }
+    if (!Array.isArray(list)) throw new Error('bad response');
+    const items = list
+      .filter((f) => f && f.type === 'file' && /\.css$/i.test(f.name) && f.download_url)
+      .map((f) => ({ name: f.name.replace(/\.css$/i, ''), url: f.download_url }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    write(OFFICIAL_KEY, { items, t: Date.now() });
+    official = { status: 'ok', items };
+  } catch (e) {
+    LOG('official themes load failed:', e.message);
+    official = { status: cached ? 'cached' : 'error', items: cached || [] };
+  }
+  officialBusy = false;
+  emit();
+}
 
 export function setCustom(css, on) {
   const s = getThemes();

@@ -9,7 +9,7 @@ const pluginsDir = path.join(src, 'plugins');
 const version = pkg.version;
 const raw = `https://raw.githubusercontent.com/${pkg.repo}/main/dist/YovariX.user.js`;
 
-const CONNECT = ['giphy.com', 'twimg.com', 'raw.githubusercontent.com'];
+const CONNECT = ['giphy.com', 'twimg.com', 'raw.githubusercontent.com', 'api.github.com'];
 
 const header = `// ==UserScript==
 // @name         YovariX
