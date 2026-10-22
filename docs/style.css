@@ -136,7 +136,6 @@ summary::after { content: "+"; font-size: 20px; color: var(--accent); transition
 details[open] summary::after { transform: rotate(45deg); }
 details > div { padding: 0 18px 16px; color: var(--muted); font-size: 15px; display: grid; gap: 10px; }
 
-/* footer */
 .foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 28px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13.5px; }
 .foot-end { display: flex; align-items: center; gap: 8px; }
 .theme { display: grid; place-items: center; width: 30px; height: 28px; color: var(--soft-ink); background: var(--soft); border: 0; border-radius: 7px; cursor: pointer; }
