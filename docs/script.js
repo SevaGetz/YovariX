@@ -3,6 +3,13 @@
 
   const REPO = 'SevaGetz/YovariX';
 
+  if (/^https?:$/.test(location.protocol)) {
+    const clean = location.pathname.replace(/index\.html$/, '').replace(/\.html$/, '');
+    if (clean !== location.pathname) {
+      try { history.replaceState(null, '', clean + location.search + location.hash); } catch (e) { /* ignore */ }
+    }
+  }
+
   const themeBtn = document.getElementById('theme');
   const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
   const isDark = () => {
