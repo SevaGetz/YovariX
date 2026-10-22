@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plugins — YovariX</title>
+<meta name="description" content="Built-in YovariX plugins: ad block, embed links, favorite GIFs and sidebar tweaks.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Plugins — YovariX">
+<meta property="og:description" content="Built-in YovariX plugins: ad block, embed links, favorite GIFs and sidebar tweaks.">
+<meta property="og:image" content="assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>try{var t=localStorage.getItem("yx-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body class="plugins-page">
+<header class="top">
+  <div class="capsule">
+    <a class="mark" href="index.html" aria-label="YovariX"><img src="assets/logo.png" alt="" width="28" height="28"></a>
+    <nav><a href="index.html">Home</a><a href="plugins.html" aria-current="page">Plugins</a><a href="install.html">Install</a><a href="faq.html">FAQ</a></nav>
+  </div>
+</header>
+<main>
+<section class="doc wide">
+  <h1>Plugins</h1>
+  <p class="lead"><span>We have</span> <b id="pcount">4</b> <span>plugins available, with more coming soon.</span></p>
+  <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></g></svg><input id="psearch" type="search" autocomplete="off" placeholder="Search by name or description…"></label>
+  <div class="pgrid" id="pgrid">
+    <article class="pcard"><h2>Ad Block</h2><p class="pd">Hides promoted posts in the timeline, in search results and under posts.</p><code>adBlock</code></article>
+    <article class="pcard"><h2>Embed Links</h2><p class="pd">"Share → Copy link" copies the link through fixupx.com, fxtwitter.com, vxtwitter.com, fixvx.com or your own domain, so previews work everywhere.</p><code>embedLink</code></article>
+    <article class="pcard"><h2>Favorite GIFs</h2><p class="pd">A Favorites tab in the GIF picker, stars on GIFs in the picker and in tweets, and mp4 → GIF conversion when you send.</p><code>gifFav</code></article>
+    <article class="pcard"><h2>Hide Menu Items</h2><p class="pd">Turn off the sidebar items you never use: Explore, Grok, Premium and more.</p><code>sidebarHide</code></article>
+  </div>
+  <p class="empty" id="pempty" hidden>No plugins match your search.</p>
+</section>
+</main>
+<footer class="foot">
+  <p>Unofficial project, not affiliated with X Corp.</p>
+  <div class="foot-end">
+    <button class="theme" id="theme" type="button" aria-label="Toggle light / dark theme" title="Light / dark">
+      <svg class="i-sun" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g></svg>
+      <svg class="i-moon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</footer>
+<script src="script.js"></script>
+</body>
+</html>

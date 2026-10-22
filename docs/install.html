@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install — YovariX</title>
+<meta name="description" content="How to install YovariX with Tampermonkey or Violentmonkey.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Install — YovariX">
+<meta property="og:description" content="How to install YovariX with Tampermonkey or Violentmonkey.">
+<meta property="og:image" content="assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>try{var t=localStorage.getItem("yx-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body class="">
+<header class="top">
+  <div class="capsule">
+    <a class="mark" href="index.html" aria-label="YovariX"><img src="assets/logo.png" alt="" width="28" height="28"></a>
+    <nav><a href="index.html">Home</a><a href="plugins.html">Plugins</a><a href="install.html" aria-current="page">Install</a><a href="faq.html">FAQ</a></nav>
+  </div>
+</header>
+<main>
+<section class="doc">
+  <h1>Install</h1>
+  <p class="lead">Install YovariX in three steps.</p>
+  <ol class="steps" id="install">
+    <li><span class="n">1</span><div><h2>Get a userscript manager</h2><p><span>Install</span> <a href="https://www.tampermonkey.net/" target="_blank" rel="noopener">Tampermonkey</a> <span>(recommended) or</span> <a href="https://violentmonkey.github.io/" target="_blank" rel="noopener">Violentmonkey</a>.</p></div></li>
+    <li><span class="n">2</span><div><h2>Install YovariX</h2><p>Click the button. Your manager opens a tab with the script details.</p><a class="btn btn-solid btn-sm" href="https://raw.githubusercontent.com/SevaGetz/YovariX/refs/heads/main/dist/YovariX.user.js"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10.5l5 5 5-5M5 20h14"/></svg><span>Install</span></a></div></li>
+    <li><span class="n">3</span><div><h2>Confirm and open X</h2><p>Press Install, then open x.com. YovariX settings are in the "More" menu.</p></div></li>
+  </ol>
+  <p class="note">Some plugins are not optimised for mobile yet. It will be fixed soon.</p>
+</section>
+</main>
+<footer class="foot">
+  <p>Unofficial project, not affiliated with X Corp.</p>
+  <div class="foot-end">
+    <button class="theme" id="theme" type="button" aria-label="Toggle light / dark theme" title="Light / dark">
+      <svg class="i-sun" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g></svg>
+      <svg class="i-moon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</footer>
+<script src="script.js"></script>
+</body>
+</html>
